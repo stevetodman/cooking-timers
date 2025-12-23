@@ -1,413 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Differential Cyanosis Simulator</title>
-<style>
-  /* --- RESET & BASE STYLES --- */
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cooking Timers</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #0f172a; /* Dark Slate background for contrast */
-    color: #f1f5f9;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem 1rem;
-  }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 24px;
+    }
 
-  /* --- LAYOUT & TYPOGRAPHY --- */
-  .header-section {
-    text-align: center;
-    margin-bottom: 2rem;
-    max-width: 600px;
-  }
+    h1 {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 8px;
+    }
 
-  .main-title {
-    font-size: 2.5rem;
-    font-weight: 800;
-    background: linear-gradient(to right, #38bdf8, #818cf8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem;
-  }
+    .subtitle {
+      text-align: center;
+      opacity: 0.7;
+      margin-bottom: 32px;
+      font-size: 1rem;
+    }
 
-  .subtitle {
-    color: #94a3b8;
-    font-size: 1.1rem;
-    line-height: 1.5;
-  }
+    .timers {
+      max-width: 600px;
+      margin: 0 auto;
+    }
 
-  /* --- CONTROLS --- */
-  .controls {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
+    .timer-card {
+      background: #1e3a5f;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      text-decoration: none;
+      color: #fff;
+      display: block;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
 
-  .btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    border: 2px solid #334155;
-    background: #1e293b;
-    color: #e2e8f0;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
+    .timer-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 184, 148, 0.2);
+    }
 
-  .btn:hover {
-    border-color: #64748b;
-    transform: translateY(-2px);
-  }
+    .timer-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
 
-  /* Active States for Buttons */
-  .btn.active {
-    transform: scale(1.05);
-    border-color: transparent;
-    color: white;
-  }
-  
-  .btn[data-condition="normal"].active { background: #059669; box-shadow: 0 0 15px rgba(5, 150, 105, 0.4); }
-  .btn[data-condition="pphn"].active { background: #d97706; box-shadow: 0 0 15px rgba(217, 119, 6, 0.4); }
-  .btn[data-condition="coarc"].active { background: #dc2626; box-shadow: 0 0 15px rgba(220, 38, 38, 0.4); }
+    .timer-meta {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
 
-  /* --- CARD DISPLAY --- */
-  .info-card {
-    background: #1e293b;
-    border-radius: 12px;
-    padding: 1.5rem;
-    width: 100%;
-    max-width: 500px;
-    margin-bottom: 2rem;
-    border-left: 5px solid transparent;
-    display: none; /* Hidden by default */
-    animation: fadeIn 0.4s ease;
-  }
+    .timer-time {
+      display: inline-block;
+      background: rgba(0, 184, 148, 0.2);
+      color: #00cec9;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      margin-top: 8px;
+    }
 
-  .info-card.active { display: block; }
-  
-  /* Specific card styling */
-  .info-card[data-type="normal"] { border-color: #059669; }
-  .info-card[data-type="pphn"] { border-color: #d97706; }
-  .info-card[data-type="coarc"] { border-color: #dc2626; }
+    .credits {
+      text-align: center;
+      margin-top: 48px;
+      font-size: 0.8rem;
+      opacity: 0.5;
+    }
 
-  .card-title { font-size: 1.5rem; margin-bottom: 1rem; }
-  .info-card[data-type="normal"] .card-title { color: #34d399; }
-  .info-card[data-type="pphn"] .card-title { color: #fbbf24; }
-  .info-card[data-type="coarc"] .card-title { color: #f87171; }
-
-  ul { list-style-position: inside; color: #cbd5e1; }
-  li { margin-bottom: 0.5rem; }
-
-  /* --- SCHEMATIC CONTAINER --- */
-  .visual-container {
-    position: relative;
-    width: 100%;
-    max-width: 400px; /* Constrain SVG width */
-    background: #1e293b;
-    border-radius: 16px;
-    padding: 1rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  }
-
-  .schematic {
-    display: none; /* Hidden by default */
-    width: 100%;
-  }
-
-  .schematic.active { display: block; }
-
-  /* SVG Styling */
-  svg {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  /* Medical Colors for SVG */
-  .color-oxy { stroke: #ef4444; fill: #ef4444; }   /* Red (Oxygenated) */
-  .color-deoxy { stroke: #3b82f6; fill: #3b82f6; } /* Blue (Deoxygenated) */
-  .color-mixed { stroke: #8b5cf6; fill: #8b5cf6; } /* Purple (Mixed) */
-  
-  .vessel { fill: none; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.5s ease; }
-  .heart-chamber { opacity: 0.9; }
-  
-  /* Text Labels inside SVG */
-  .svg-text { font-family: monospace; font-weight: 700; font-size: 12px; fill: #fff; pointer-events: none; }
-  .spo2-box { fill: #0f172a; stroke: #475569; stroke-width: 1; rx: 4; }
-  
-  /* Animations */
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  
-  @keyframes flow { 
-    0% { stroke-dashoffset: 20; } 
-    100% { stroke-dashoffset: 0; } 
-  }
-
-  .flow-line {
-    stroke-dasharray: 6 4;
-    animation: flow 1s linear infinite;
-    stroke-width: 3;
-    opacity: 0.8;
-  }
-
-  .resistance-lines { stroke: #f59e0b; stroke-width: 2; opacity: 0.7; }
-
-</style>
+    .credits a {
+      color: #00cec9;
+    }
+  </style>
 </head>
 <body>
+  <h1>🍳 Cooking Timers</h1>
+  <p class="subtitle">Step-by-step timers for complex recipes</p>
 
-  <div class="header-section">
-    <h1 class="main-title">Differential Cyanosis</h1>
-    <p class="subtitle">Hemodynamic simulation of neonatal congenital heart defects.</p>
+  <div class="timers">
+    <a href="ribs-timer.html" class="timer-card">
+      <div class="timer-title">🍖 Baby Back Ribs</div>
+      <div class="timer-meta">Alton Brown • Good Eats</div>
+      <span class="timer-time">~4.5 hours</span>
+    </a>
   </div>
 
-  <!-- --- CONTROLS --- -->
-  <div class="controls">
-    <button class="btn active" data-condition="normal">Normal Physiology</button>
-    <button class="btn" data-condition="pphn">PPHN</button>
-    <button class="btn" data-condition="coarc">Critical Coarctation</button>
+  <div class="credits">
+    Inspired by <a href="https://github.com/simonw/tools">Simon Willison's tools</a>
   </div>
-
-  <!-- --- INFO CARDS --- -->
-  <div class="info-card active" data-type="normal">
-    <h2 class="card-title">Normal Transitional Circulation</h2>
-    <ul>
-      <li><strong>Anatomy:</strong> Structurally normal heart.</li>
-      <li><strong>Pressures:</strong> Systemic (Aorta) > Pulmonary (PA).</li>
-      <li><strong>Shunt:</strong> If PDA is open, flow is Left-to-Right (Red to Blue).</li>
-      <li><strong>Outcome:</strong> Entire body receives oxygenated blood. SpO2 is equal in hand and foot.</li>
-    </ul>
-  </div>
-
-  <div class="info-card" data-type="pphn">
-    <h2 class="card-title">PPHN (Persistent Pulmonary Hypertension)</h2>
-    <ul>
-      <li><strong>Anatomy:</strong> Normal heart, but high lung resistance.</li>
-      <li><strong>Pressures:</strong> Pulmonary (PA) > Systemic (Aorta).</li>
-      <li><strong>Shunt:</strong> Right-to-Left via PDA. Deoxygenated blood enters the descending aorta.</li>
-      <li><strong>Outcome:</strong> Differential Cyanosis. <br>Upper body (Pre-ductal) = Pink.<br>Lower body (Post-ductal) = Blue.</li>
-    </ul>
-  </div>
-
-  <div class="info-card" data-type="coarc">
-    <h2 class="card-title">Critical Coarctation of Aorta</h2>
-    <ul>
-      <li><strong>Anatomy:</strong> Severe narrowing of the aortic arch (pre-ductal).</li>
-      <li><strong>Mechanism:</strong> LV cannot pump to lower body. Lower body depends on the RV pumping through the PDA.</li>
-      <li><strong>Shunt:</strong> Right-to-Left via PDA (essential for survival).</li>
-      <li><strong>Outcome:</strong> Differential Cyanosis.<br>Right Hand = Pink (from LV).<br>Feet = Blue/Grey (from RV).</li>
-    </ul>
-  </div>
-
-  <!-- --- VISUALIZATION --- -->
-  <div class="visual-container">
-    
-    <!-- DEFINITIONS (Shared Gradients and Markers) -->
-    <svg width="0" height="0" style="position: absolute;">
-      <defs>
-        <!-- Arrowheads -->
-        <marker id="arrow-red" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-          <path d="M0,0 L6,3 L0,6" fill="#ef4444" />
-        </marker>
-        <marker id="arrow-blue" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-          <path d="M0,0 L6,3 L0,6" fill="#3b82f6" />
-        </marker>
-        
-        <!-- Gradients for Mixing Blood -->
-        <!-- PPHN Gradient: Starts Red (Arch), turns Blue (Descending) -->
-        <linearGradient id="grad-pphn" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="10%" stop-color="#ef4444" /> <!-- Red at top -->
-          <stop offset="35%" stop-color="#8b5cf6" /> <!-- Purple at mixing point -->
-          <stop offset="100%" stop-color="#3b82f6" /> <!-- Blue at bottom -->
-        </linearGradient>
-
-        <!-- Normal Gradient: All Red (Functional) -->
-        <linearGradient id="grad-normal" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#ef4444" />
-          <stop offset="100%" stop-color="#ef4444" />
-        </linearGradient>
-      </defs>
-    </svg>
-
-
-    <!-- 1. NORMAL SCHEMATIC -->
-    <div class="schematic active" id="vis-normal">
-      <svg viewBox="0 0 300 400">
-        <!-- Oximeter Boxes -->
-        <rect x="10" y="20" width="120" height="30" class="spo2-box" />
-        <text x="20" y="40" class="svg-text" fill="#ef4444">R.Hand: 99%</text>
-        
-        <rect x="10" y="350" width="120" height="30" class="spo2-box" />
-        <text x="20" y="370" class="svg-text" fill="#ef4444">Foot: 99%</text>
-
-        <!-- Heart Chambers -->
-        <rect x="80" y="240" width="60" height="70" rx="15" fill="#3b82f6" class="heart-chamber" />
-        <text x="95" y="280" class="svg-text" fill="white">RV</text>
-
-        <rect x="160" y="240" width="60" height="70" rx="15" fill="#ef4444" class="heart-chamber" />
-        <text x="175" y="280" class="svg-text" fill="white">LV</text>
-
-        <!-- Pulmonary Artery (Blue Base) -->
-        <path d="M 110 240 L 110 150 Q 110 120 60 120" class="vessel" stroke="#3b82f6" />
-        <text x="65" y="140" class="svg-text" fill="#3b82f6">PA</text>
-
-        <!-- Aorta (Red Base) -->
-        <path d="M 190 240 L 190 100 Q 190 60 250 60" class="vessel" stroke="#ef4444" />
-        
-        <!-- Head/Neck Vessels (Pre-ductal) -->
-        <path d="M 190 140 L 190 60" class="vessel" stroke="#ef4444" />
-
-        <!-- Descending Aorta (Normal = Red) -->
-        <path d="M 250 60 Q 280 60 280 100 L 280 340" class="vessel" stroke="#ef4444" />
-
-        <!-- PDA (Left to Right Shunt) -->
-        <!-- Connecting Aorta (Red) to PA (Blue) -->
-        <line x1="190" y1="150" x2="116" y2="150" stroke="#475569" stroke-width="12" opacity="0.3" />
-        <line x1="190" y1="150" x2="122" y2="150" stroke="#ef4444" fill="none" marker-end="url(#arrow-red)" class="flow-line" />
-        <text x="140" y="140" class="svg-text" fill="#fff">PDA</text>
-
-        <text x="200" y="30" class="svg-text" text-anchor="middle" fill="#94a3b8">Upper Body</text>
-        <text x="240" y="370" class="svg-text" text-anchor="middle" fill="#94a3b8">Lower Body</text>
-      </svg>
-    </div>
-
-
-    <!-- 2. PPHN SCHEMATIC -->
-    <div class="schematic" id="vis-pphn">
-      <svg viewBox="0 0 300 400">
-        <!-- Oximeter Boxes (Differential) -->
-        <rect x="10" y="20" width="120" height="30" class="spo2-box" />
-        <text x="20" y="40" class="svg-text" fill="#ef4444">R.Hand: 98%</text>
-        
-        <rect x="10" y="350" width="120" height="30" class="spo2-box" />
-        <text x="20" y="370" class="svg-text" fill="#3b82f6">Foot: 85%</text>
-
-        <!-- Heart Chambers -->
-        <rect x="80" y="240" width="60" height="70" rx="15" fill="#3b82f6" class="heart-chamber" />
-        <text x="95" y="280" class="svg-text" fill="white">RV</text>
-
-        <rect x="160" y="240" width="60" height="70" rx="15" fill="#ef4444" class="heart-chamber" />
-        <text x="175" y="280" class="svg-text" fill="white">LV</text>
-
-        <!-- PA with Resistance Lines -->
-        <path d="M 110 240 L 110 150 Q 110 120 60 120" class="vessel" stroke="#3b82f6" />
-        <!-- Resistance visual cues -->
-        <line x1="50" y1="110" x2="50" y2="130" class="resistance-lines" />
-        <line x1="55" y1="110" x2="55" y2="130" class="resistance-lines" />
-        <text x="40" y="105" class="svg-text" fill="#f59e0b">High PVR</text>
-
-        <!-- Aorta -->
-        <path d="M 190 240 L 190 100 Q 190 60 250 60" class="vessel" stroke="#ef4444" />
-        <path d="M 190 140 L 190 60" class="vessel" stroke="#ef4444" />
-
-        <!-- PDA (Right to Left Shunt) -->
-        <line x1="110" y1="150" x2="280" y2="150" stroke="#475569" stroke-width="12" opacity="0.3" />
-        <!-- Blue arrow pushing into Aorta -->
-        <line x1="110" y1="150" x2="270" y2="150" stroke="#3b82f6" fill="none" marker-end="url(#arrow-blue)" class="flow-line" />
-
-        <!-- Descending Aorta (Gradient Mixing) -->
-        <!-- Note: Connects at y=150 where PDA hits -->
-        <path d="M 250 60 Q 280 60 280 100 L 280 340" class="vessel" stroke="url(#grad-pphn)" />
-
-        <text x="200" y="30" class="svg-text" text-anchor="middle" fill="#94a3b8">Upper Body</text>
-        <text x="240" y="370" class="svg-text" text-anchor="middle" fill="#94a3b8">Lower Body</text>
-      </svg>
-    </div>
-
-
-    <!-- 3. COARCTATION SCHEMATIC -->
-    <div class="schematic" id="vis-coarc">
-      <svg viewBox="0 0 300 400">
-        <!-- Oximeter Boxes -->
-        <rect x="10" y="20" width="120" height="30" class="spo2-box" />
-        <text x="20" y="40" class="svg-text" fill="#ef4444">R.Hand: 99%</text>
-        
-        <rect x="10" y="350" width="120" height="30" class="spo2-box" />
-        <text x="20" y="370" class="svg-text" fill="#3b82f6">Foot: 88%</text>
-
-        <!-- Heart Chambers -->
-        <rect x="80" y="240" width="60" height="70" rx="15" fill="#3b82f6" class="heart-chamber" />
-        <rect x="160" y="240" width="60" height="70" rx="15" fill="#ef4444" class="heart-chamber" />
-
-        <!-- PA -->
-        <path d="M 110 240 L 110 150 Q 110 120 60 120" class="vessel" stroke="#3b82f6" />
-
-        <!-- Aorta with PINCH (Stenosis) -->
-        <!-- Draw aorta going up, but pinching before the PDA connection zone -->
-        <path d="M 190 240 L 190 100 Q 190 60 220 60" class="vessel" stroke="#ef4444" />
-        <!-- The Pinch -->
-        <path d="M 220 60 Q 240 70 260 60" class="vessel" stroke="#ef4444" stroke-width="4" /> <!-- Thinner stroke = narrowing -->
-        <text x="240" y="50" class="svg-text" fill="#ef4444" text-anchor="middle">Stenosis</text>
-
-        <!-- Head Vessels (Pre-stenosis) -->
-        <path d="M 190 140 L 190 60" class="vessel" stroke="#ef4444" />
-
-        <!-- Descending Aorta (Supplied by PDA) -->
-        <path d="M 260 60 Q 280 60 280 100 L 280 340" class="vessel" stroke="url(#grad-pphn)" /> 
-        <!-- Using PPHN gradient here because it represents Blue/Mixed flow downstream -->
-
-        <!-- PDA (Right to Left Shunt - Essential Flow) -->
-        <line x1="110" y1="150" x2="280" y2="150" stroke="#475569" stroke-width="12" opacity="0.3" />
-        <line x1="110" y1="150" x2="270" y2="150" stroke="#3b82f6" fill="none" marker-end="url(#arrow-blue)" class="flow-line" />
-        <text x="150" y="140" class="svg-text" fill="#fff">PDA (R->L)</text>
-
-        <text x="200" y="30" class="svg-text" text-anchor="middle" fill="#94a3b8">Upper Body</text>
-        <text x="240" y="370" class="svg-text" text-anchor="middle" fill="#94a3b8">Lower Body</text>
-      </svg>
-    </div>
-
-  </div>
-
-<script>
-  // JavaScript Logic
-  // This script handles the switching between 3 medical conditions.
-  // It updates the buttons, the text explanation cards, and the SVG diagrams.
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const buttons = document.querySelectorAll('.btn');
-    const cards = document.querySelectorAll('.info-card');
-    const visuals = document.querySelectorAll('.schematic');
-
-    buttons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const condition = btn.getAttribute('data-condition');
-
-        // 1. Update Buttons
-        buttons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        // 2. Update Text Cards
-        cards.forEach(card => {
-          if (card.getAttribute('data-type') === condition) {
-            card.classList.add('active');
-          } else {
-            card.classList.remove('active');
-          }
-        });
-
-        // 3. Update Visuals (SVGs)
-        visuals.forEach(vis => {
-          if (vis.id === `vis-${condition}`) {
-            vis.classList.add('active');
-          } else {
-            vis.classList.remove('active');
-          }
-        });
-      });
-    });
-  });
-</script>
-
 </body>
 </html>
