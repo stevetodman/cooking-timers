@@ -54,3 +54,7 @@ To add a new timer:
 ## License
 
 MIT — use freely for your own cooking adventures.
+
+## Credits
+
+Timer UI inspired by [Simon Willison's tools](https://github.com/simonw/tools) — a collection of single-file HTML tools.
